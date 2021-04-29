@@ -69,11 +69,15 @@ public:
     void init(const QString &_configFile);
 
     QString convert2IXML(const QString& _inStr,
-                         INOUT bool& _spellCorrected,
+                         INOUT bool& _spellCorrected,                         
+                         bool _putXmlTagsInSeperateList,
+                         QStringList* _lstXmlTags,
+                         const QList<enuTextTags::Type> _removingTags,
                          const QString& _lang = "",
                          quint32 _lineNo = 0,
                          bool _interactive = false,
-                         bool _useSpellCorrector = true);
+                         bool _useSpellCorrector = true,
+                         bool _setTagValue = true);
     QString supportedSuffixes() const;
 
 private:
@@ -86,11 +90,31 @@ private:
                         QStringList *_listOfMatches,
                         quint8 _capID = 0);
 
-    inline void replaceTag(QString& _output, enuTextTags::Type _type, const QString& _value, const QString& translationAttribte = ""){
-        if(translationAttribte.isEmpty())
-            _output.append(QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value));
+    inline void replaceTag(QString& _output,
+                           enuTextTags::Type _type,
+                           const QString& _value,
+                           bool _putXmlTagsInList,
+                           QStringList* _lstXmlTags, 
+                           bool _setTagValue = true){
+        QString Tag;
+        
+        if(_setTagValue)
+            Tag = QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value);
         else
-            _output.append(QString("<%1 Translation=%3>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value).arg(translationAttribte));
+            Tag = QString("<%1>").arg(enuTextTags::toStr(_type));
+        
+
+        if(_putXmlTagsInList)
+        {
+            _output.append(Tag);
+            _lstXmlTags->append(_setTagValue
+                                ? Tag
+                                : QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value));
+        }
+        else
+        {
+            _output.append(Tag);
+        }        
     }
 
 

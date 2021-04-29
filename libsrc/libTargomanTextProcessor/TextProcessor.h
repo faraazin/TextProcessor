@@ -83,13 +83,16 @@ public:
     bool init(QSharedPointer<QSettings> _configSettings = QSharedPointer<QSettings>());
 
     QString text2IXML(const QString& _inStr,
-                      INOUT bool &_spellCorrected,
+                      INOUT bool &_spellCorrected,                      
                       const QString& _lang = "",
                       quint32 _lineNo = 0,
                       bool _interactive = true,
                       bool _useSpellCorrector = true,
                       QList<enuTextTags::Type> _removingTags = QList<enuTextTags::Type>(),
-                      QList<stuIXMLReplacement> _replacements = QList<stuIXMLReplacement>()) const;
+                      QList<stuIXMLReplacement> _replacements = QList<stuIXMLReplacement>(),
+                      bool _putXmlTagsInSeperateList = false,
+                      QStringList* _lstXmlTags = NULL,
+                      bool _setTagValue = true) const;
 
     QString ixml2Text(const QString& _ixml,
                       bool _detokenize = true,

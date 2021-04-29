@@ -78,7 +78,7 @@ bool c_ixml2Text(const char* _source,
                 _targetMaxLength);
 }
 
-bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength) {
+bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength,bool _setTagValue) {
     QString Source = QString::fromUtf8(_source);
     QString Language = QString::fromUtf8(_language);
     bool SpellCorrected = false;
@@ -91,7 +91,10 @@ bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrec
                     false,
                     _noSpellCorrector,
                     QList<enuTextTags::Type>(),
-                    QList<stuIXMLReplacement>()
+                    QList<stuIXMLReplacement>(),
+                    false,
+                    NULL,
+                    _setTagValue
                     ),
                 _target,
                 _targetMaxLength);
@@ -118,7 +121,10 @@ bool c_tokenize(const char* _source,
                         false,
                         _noSpellCorrector,
                         QList<enuTextTags::Type>(),
-                        QList<stuIXMLReplacement>()
+                        QList<stuIXMLReplacement>(),
+                        false,
+                        NULL,
+                        true
                         ),
                     false,
                     _hinidiDigits,

@@ -74,15 +74,21 @@ void IXMLWriter::init(const QString &_configFile)
  * @param _lineNo line number
  * @param _interactive argument of spellCorrector and normalizer. can SpellCorrector or Normalizer class be done interactively or not.
  * @param _useSpellCorrector use spell corrector or not.
+ * @param _putXmlTagsInSeperateList put xml tages in _lstXmlTags or put them in text
+ * @param _lstXmlTags list of Xml tags
  * @return returns converted ixml text.
  */
 
 QString IXMLWriter::convert2IXML(const QString &_inStr,
                                  bool &_spellCorrected,
+                                 bool _putXmlTagsInSeperateList,
+                                 QStringList* _lstXmlTags,
+                                 const QList<enuTextTags::Type> _removingTags,
                                  const QString& _lang,
                                  quint32 _lineNo,
                                  bool _interactive,
-                                 bool _useSpellCorrector)
+                                 bool _useSpellCorrector,
+                                 bool _setTagValue)
 {
     // Email detection
     thread_local static QRegularExpression RxEmail = QRegularExpression("([A-Za-z0-9._%+-][A-Za-z0-9._%+-]*@[A-Za-z0-9.-][A-Za-z0-9.-]*\\.[A-Za-z]{2,4})");
@@ -304,45 +310,99 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
     //replace targoman marks with their corresponding words, wrapped with xml tags.
     InputPhrase = OutputPhrase;
     OutputPhrase.clear();
+
+    if(_putXmlTagsInSeperateList)
+        _lstXmlTags->clear();
+
+    QSet<enuTextTags::Type> IgnoreTags = QSet<enuTextTags::Type>::fromList(_removingTags);
+
+    enuTextTags::Type TagType;
+    QString TagValue;
+    bool IsTag;
     foreach (const QString& Token, InputPhrase.split(" ",QString::SkipEmptyParts)) {
-        if(Token == "TGMNEML")
-            replaceTag(OutputPhrase, enuTextTags::Email, LstEmail.takeFirst());
-        else if(Token == "TGMNURL")
-            replaceTag(OutputPhrase, enuTextTags::URL, LstURL.takeFirst());
-        else if(Token == "TGMNABD")
-            replaceTag(OutputPhrase, enuTextTags::Abbreviation, LstAbbr[0].takeFirst());
-        else if(Token == "TGMNABR")
-            replaceTag(OutputPhrase, enuTextTags::Abbreviation, LstAbbr[1].takeFirst());
-        else if(Token == "TGMNABS")
-            replaceTag(OutputPhrase, enuTextTags::Abbreviation, LstAbbr[2].takeFirst());
-        else if(Token == "TGMNMDT")
+        IsTag = true;
+        if(Token == "TGMNEML"){
+            TagType = enuTextTags::Email;
+            TagValue = LstEmail.takeFirst();                
+        }
+        else if(Token == "TGMNURL"){
+            TagType = enuTextTags::URL;
+            TagValue = LstURL.takeFirst();
+        }
+        else if(Token == "TGMNABD"){
+            TagType = enuTextTags::Abbreviation;
+            TagValue = LstAbbr[0].takeFirst();
+        }
+        else if(Token == "TGMNABR"){
+            TagType = enuTextTags::Abbreviation;
+            TagValue = LstAbbr[1].takeFirst();
+        }
+        else if(Token == "TGMNABS"){
+            TagType = enuTextTags::Abbreviation;
+            TagValue = LstAbbr[2].takeFirst();
+        }
+        else if(Token == "TGMNDAT"){
+            TagType = enuTextTags::Date;
+            TagValue = LstDate.takeFirst();
+        }
+        else if(Token == "TGMNTIM"){
+            TagType = enuTextTags::Time;
+            TagValue = LstTime.takeFirst();
+        }
+        else if(Token == "TGMNORD"){
+            TagType = enuTextTags::Ordinals;
+            TagValue = LstOrdinal.takeFirst();
+        }
+        else if(Token == "TGMNSNM"){
+            TagType = enuTextTags::SpecialNumber;
+            TagValue = LstSpecialNumber.takeFirst();
+        }
+        else if(Token == "TGMNNUL"){
+            TagType = enuTextTags::Number;
+            TagValue = LstNumberLeft.takeFirst();
+        }
+        else if(Token == "TGMNNUR"){
+            TagType = enuTextTags::Number;
+            TagValue = LstNumberRight.takeFirst();
+        }
+        else if(Token == "TGMNOLI"){
+            TagType = enuTextTags::OrderedListItem;
+            TagValue = LstOrderedItem.takeFirst();
+        }
+        else if(Token == "TGMNSYM"){
+            TagType = enuTextTags::Symbol;
+            TagValue = LstSymbols.takeFirst();
+        }
+        else if(Token == "TGMNMDT"){
             OutputPhrase.append(MULTI_DOT);
-        else if(Token == "TGMNDAT")
-            replaceTag(OutputPhrase, enuTextTags::Date, LstDate.takeFirst());
-        else if(Token == "TGMNTIM")
-            replaceTag(OutputPhrase, enuTextTags::Time, LstTime.takeFirst());
-        else if(Token == "TGMNORD")
-            replaceTag(OutputPhrase, enuTextTags::Ordinals, LstOrdinal.takeFirst());
-        else if(Token == "TGMNSNM")
-            replaceTag(OutputPhrase, enuTextTags::SpecialNumber, LstSpecialNumber.takeFirst());
-        else if(Token == "TGMNNUL")
-            replaceTag(OutputPhrase, enuTextTags::Number, LstNumberLeft.takeFirst());
-        else if(Token == "TGMNNUR")
-            replaceTag(OutputPhrase, enuTextTags::Number, LstNumberRight.takeFirst());
-        else if(Token == "TGMNOLI")
-            replaceTag(OutputPhrase, enuTextTags::OrderedListItem, LstOrderedItem.takeFirst());
-        else if(Token == "TGMNSYM")
-            replaceTag(OutputPhrase, enuTextTags::Symbol, LstSymbols.takeFirst());
-        else if(Token == "TGMNSFX")
+            IsTag = false;
+        }
+        else if(Token == "TGMNSFX"){
             OutputPhrase.append(LstSuffixes.takeFirst());
-        else if(Token == "<")
+            IsTag = false;
+        }
+        else if(Token == "<"){
             OutputPhrase.append("&lt;");
-        else if(Token == ">")
+            IsTag = false;
+        }
+        else if(Token == ">"){
             OutputPhrase.append("&gt;");
-        else if(Token == "&")
+            IsTag = false;
+        }
+        else if(Token == "&"){
             OutputPhrase.append("&amp;");
-        else
+            IsTag = false;
+        }
+        else{
             OutputPhrase.append(Token);
+            IsTag = false;                
+        }
+        if(IsTag){
+            if(IgnoreTags.contains(TagType))
+                OutputPhrase.append(TagValue);
+            else
+                replaceTag(OutputPhrase, TagType, TagValue,_putXmlTagsInSeperateList,_lstXmlTags,_setTagValue);
+        }
         OutputPhrase.append(" ");
     }
     TargomanDebug(7,"[TRP] |"<<OutputPhrase<<"|");

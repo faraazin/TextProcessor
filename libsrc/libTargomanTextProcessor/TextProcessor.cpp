@@ -108,9 +108,12 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                                          const QString& _lang,
                                          quint32 _lineNo,
                                          bool _interactive,
-                                         bool _useSpellCorrector,
+                                         bool _useSpellCorrector,                              
                                          QList<enuTextTags::Type> _removingTags,
-                                         QList<stuIXMLReplacement> _replacements) const
+                                         QList<stuIXMLReplacement> _replacements,
+                                         bool _putXmlTagsInSeperateList,
+                                         QStringList* _lstXmlTags,
+                                         bool _setTagValue) const
 {
     if (!Initialized)
         throw exTextProcessor("Text Processor has not been initialized");
@@ -121,18 +124,22 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
     QString IXML = IXMLWriter::instance().convert2IXML(
                        _inStr,
                        _spellCorrected,
+                       _putXmlTagsInSeperateList && _lstXmlTags,
+                       _lstXmlTags,
+                       _removingTags,
                        LangCode ? LangCode : "",
                        _lineNo,
                        _interactive,
-                       _useSpellCorrector);
+                       _useSpellCorrector,
+                       _setTagValue);
 
     foreach(const stuIXMLReplacement& Replacement, _replacements)
         IXML.replace(Replacement.SearchRegExp, Replacement.AfterString);
 
-    foreach(enuTextTags::Type Tag, _removingTags)
-        IXML.remove(
-                    QString("<%1>").arg(enuTextTags::toStr(Tag))).remove(
-                    QString("</%1>").arg(enuTextTags::toStr(Tag)));
+    // foreach(enuTextTags::Type Tag, _removingTags)
+    //     IXML.remove(
+    //                 QString("<%1>").arg(enuTextTags::toStr(Tag))).remove(
+    //                 QString("</%1>").arg(enuTextTags::toStr(Tag)));
 
     TargomanDebug(6, "[REM-TAGS] |"<<IXML<<"|");
     TargomanDebug(7,"ConvertToIXML Process Finished");
