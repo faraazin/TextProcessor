@@ -92,25 +92,29 @@ public:
                       QList<stuIXMLReplacement> _replacements = QList<stuIXMLReplacement>(),
                       bool _putXmlTagsInSeperateList = false,
                       QStringList* _lstXmlTags = NULL,
-                      bool _setTagValue = true) const;
+                      bool _setTagValue = true,
+                      bool _convertToLower = false) const;
 
     QString ixml2Text(const QString& _ixml,
                       bool _detokenize = true,
                       bool _hinidiDigits = false,
                       bool _arabicPunctuations = false,
-                      bool _breakSentences = false) const;
+                      bool _breakSentences = false,
+                      bool _convertToLower = false) const;
 
     inline QString normalizeText(const QString _input,
                                  bool _interactive,
-                                 const QString &_lang) const{
+                                 const QString &_lang,
+                                 bool _convertToLower = false) const{
         bool SpellCorrected;
-        return this->normalizeText(_input, SpellCorrected, _interactive, _lang);
+        return this->normalizeText(_input, SpellCorrected, _interactive, _lang,_convertToLower);
     }
 
     QString normalizeText(const QString _input,
                           INOUT bool &_spellCorrected,
                           bool _interactive = false,
-                          const QString& _lang = "") const;
+                          const QString& _lang = "",
+                          bool _convertToLower = false) const;
 
 private:
     TargomanTextProcessor();

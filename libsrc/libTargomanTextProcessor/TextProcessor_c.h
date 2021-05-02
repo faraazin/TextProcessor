@@ -36,8 +36,9 @@ bool c_ixml2Text(const char* _source,
                  bool _detokenize = true,
                  bool _hinidiDigits = false,
                  bool _arabicPunctuations = false,
-                 bool _breakSentences = false);
-bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength,bool _setTagValue);
+                 bool _breakSentences = false,
+                 bool _convertToLower = false);
+bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength,bool _setTagValue,bool _convertToLower);
 bool c_tokenize(const char* _source,
                 const char* _language,
                 bool _noSpellCorrector,
@@ -45,5 +46,6 @@ bool c_tokenize(const char* _source,
                 int _targetMaxLength,
                 bool _hinidiDigits = false,
                 bool _arabicPunctuations = false,
-                bool _breakSentences = false);
-bool c_normalize(const char* _source, const char* _language, char* _target, int _targetMaxLength);
+                bool _breakSentences = false,
+                bool _convertToLower = false);
+bool c_normalize(const char* _source, const char* _language, char* _target, int _targetMaxLength,bool _convertToLower);

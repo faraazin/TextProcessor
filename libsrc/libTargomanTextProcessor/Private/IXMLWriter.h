@@ -77,7 +77,8 @@ public:
                          quint32 _lineNo = 0,
                          bool _interactive = false,
                          bool _useSpellCorrector = true,
-                         bool _setTagValue = true);
+                         bool _setTagValue = true,
+                         bool _convertToLower = false);
     QString supportedSuffixes() const;
 
 private:
@@ -99,7 +100,7 @@ private:
         QString Tag;
         
         if(_setTagValue)
-            Tag = QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value);
+            Tag = QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value);        
         else
             Tag = QString("<%1>").arg(enuTextTags::toStr(_type));
         

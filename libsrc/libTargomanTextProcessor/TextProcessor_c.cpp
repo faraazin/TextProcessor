@@ -78,7 +78,7 @@ bool c_ixml2Text(const char* _source,
                 _targetMaxLength);
 }
 
-bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength,bool _setTagValue) {
+bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrector, char* _target, int _targetMaxLength,bool _setTagValue,bool _convertToLower) {
     QString Source = QString::fromUtf8(_source);
     QString Language = QString::fromUtf8(_language);
     bool SpellCorrected = false;
@@ -94,7 +94,8 @@ bool c_text2IXML(const char* _source, const char* _language, bool _noSpellCorrec
                     QList<stuIXMLReplacement>(),
                     false,
                     NULL,
-                    _setTagValue
+                    _setTagValue,
+                    _convertToLower
                     ),
                 _target,
                 _targetMaxLength);
@@ -107,7 +108,8 @@ bool c_tokenize(const char* _source,
                 int _targetMaxLength,
                 bool _hinidiDigits,
                 bool _arabicPunctuations,
-                bool _breakSentences) {
+                bool _breakSentences,
+                bool _convertToLower) {
     QString Source = QString::fromUtf8(_source);
     QString Language = QString::fromUtf8(_language);
     bool SpellCorrected = false;
@@ -129,13 +131,14 @@ bool c_tokenize(const char* _source,
                     false,
                     _hinidiDigits,
                     _arabicPunctuations,
-                    _breakSentences
+                    _breakSentences,
+                    _convertToLower
                     ),
                 _target,
                 _targetMaxLength);
 }
 
-bool c_normalize(const char* _source, const char* _language, char* _target, int _targetMaxLength) {
+bool c_normalize(const char* _source, const char* _language, char* _target, int _targetMaxLength,bool _convertToLower) {
     QString Source = QString::fromUtf8(_source);
     QString Language = QString::fromUtf8(_language);
     bool SpellCorrected = false;
@@ -143,7 +146,8 @@ bool c_normalize(const char* _source, const char* _language, char* _target, int 
                 TargomanTextProcessor::instance().normalizeText(
                     Source,
                     SpellCorrected,
-                    Language),
+                    Language,
+                    _convertToLower),
                 _target,
                 _targetMaxLength);
 }

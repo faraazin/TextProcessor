@@ -113,7 +113,8 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                                          QList<stuIXMLReplacement> _replacements,
                                          bool _putXmlTagsInSeperateList,
                                          QStringList* _lstXmlTags,
-                                         bool _setTagValue) const
+                                         bool _setTagValue,
+                                         bool _convertToLower) const
 {
     if (!Initialized)
         throw exTextProcessor("Text Processor has not been initialized");
@@ -131,7 +132,8 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                        _lineNo,
                        _interactive,
                        _useSpellCorrector,
-                       _setTagValue);
+                       _setTagValue,
+                       _convertToLower);
 
     foreach(const stuIXMLReplacement& Replacement, _replacements)
         IXML.replace(Replacement.SearchRegExp, Replacement.AfterString);
@@ -205,7 +207,8 @@ QString TargomanTextProcessor::ixml2Text(const QString &_ixml,
                                          bool _detokenize,
                                          bool _hinidiDigits,
                                          bool _arabicPunctuations,
-                                         bool _breakSentences) const
+                                         bool _breakSentences,
+                                         bool _convertToLower) const
 {
     if (!Initialized)
         throw exTextProcessor("Text Processor has not been initialized");
@@ -295,13 +298,16 @@ QString TargomanTextProcessor::ixml2Text(const QString &_ixml,
                         }
                 }
             }
-        }
+
+            
+        }        
         if (_breakSentences)
             Textlines.append(IXMLLines.join("\n"));
         else
             Textlines.append(IXMLLines.join(" "));
     }
-    return Textlines.join("\n");
+    QString Result = Textlines.join("\n");
+    return  _convertToLower ? Result.toLower() : Result;
 }
 
 /**
@@ -316,7 +322,8 @@ QString TargomanTextProcessor::ixml2Text(const QString &_ixml,
 QString TargomanTextProcessor::normalizeText(const QString _input,
                                              bool &_spellCorrected,
                                              bool _interactive,
-                                             const QString &_lang) const
+                                             const QString &_lang,
+                                             bool _convertToLower) const
 {
     QString Output;
     if(_lang.size()){
@@ -326,7 +333,9 @@ QString TargomanTextProcessor::normalizeText(const QString _input,
     } else
         Output = Normalizer::instance().normalize(_input, _interactive);
 
-    return Normalizer::fullTrim(Output);
+    Output = Normalizer::fullTrim(Output);
+
+    return _convertToLower ? Output.toLower() : Output;
 }
 
 }

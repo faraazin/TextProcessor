@@ -88,7 +88,8 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
                                  quint32 _lineNo,
                                  bool _interactive,
                                  bool _useSpellCorrector,
-                                 bool _setTagValue)
+                                 bool _setTagValue,
+                                 bool _convertToLower)
 {
     // Email detection
     thread_local static QRegularExpression RxEmail = QRegularExpression("([A-Za-z0-9._%+-][A-Za-z0-9._%+-]*@[A-Za-z0-9.-][A-Za-z0-9.-]*\\.[A-Za-z]{2,4})");
@@ -378,7 +379,10 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
             IsTag = false;
         }
         else if(Token == "TGMNSFX"){
-            OutputPhrase.append(LstSuffixes.takeFirst());
+            TagValue = LstSuffixes.takeFirst();
+            if(_convertToLower)
+                TagValue = TagValue.toLower();
+            OutputPhrase.append(TagValue);
             IsTag = false;
         }
         else if(Token == "<"){
@@ -393,11 +397,15 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
             OutputPhrase.append("&amp;");
             IsTag = false;
         }
-        else{
-            OutputPhrase.append(Token);
+        else{            
+            OutputPhrase.append(_convertToLower
+                                    ? Token.toLower()
+                                    : Token);
             IsTag = false;                
         }
         if(IsTag){
+            if(_convertToLower)
+                TagValue = TagValue.toLower();
             if(IgnoreTags.contains(TagType))
                 OutputPhrase.append(TagValue);
             else
