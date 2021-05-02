@@ -112,7 +112,7 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                                          QList<enuTextTags::Type> _removingTags,
                                          QList<stuIXMLReplacement> _replacements,
                                          bool _putXmlTagsInSeperateList,
-                                         QStringList* _lstXmlTags,
+                                         QVariantList* _lstXmlTags,
                                          bool _setTagValue,
                                          bool _convertToLower) const
 {
@@ -220,8 +220,8 @@ QString TargomanTextProcessor::ixml2Text(const QString &_ixml,
     thread_local static QRegularExpression RxDetokenQuote  = QRegularExpression("(?:(?: |^)\\' )([^\\']+)(?: \\'(?: |$))");
     thread_local static QRegularExpression RxAllIXMLTags =
             QRegularExpression(
-                QString("<%1>").arg(enuTextTags::options().join(">|<")) +
-                QString("|</%1>").arg(enuTextTags::options().join(">|</"))
+                QString("<%1>").arg(enuTextTags::options().join(">|<")).toLower() +
+                QString("|</%1>").arg(enuTextTags::options().join(">|</")).toLower()
                 );
 
 

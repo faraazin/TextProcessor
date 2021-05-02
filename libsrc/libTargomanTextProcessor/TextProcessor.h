@@ -32,6 +32,7 @@
 #include "libTargomanCommon/exTargomanBase.h"
 #include "libTargomanCommon/Logger.h"
 #include "libTargomanCommon/Types.h"
+
 #include "ISO639.h" //From https://github.com/softnhard/ISO639
 
 namespace Targoman {
@@ -91,7 +92,7 @@ public:
                       QList<enuTextTags::Type> _removingTags = QList<enuTextTags::Type>(),
                       QList<stuIXMLReplacement> _replacements = QList<stuIXMLReplacement>(),
                       bool _putXmlTagsInSeperateList = false,
-                      QStringList* _lstXmlTags = NULL,
+                      QVariantList* _lstXmlTags = NULL,
                       bool _setTagValue = true,
                       bool _convertToLower = false) const;
 

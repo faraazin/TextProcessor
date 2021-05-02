@@ -82,7 +82,7 @@ void IXMLWriter::init(const QString &_configFile)
 QString IXMLWriter::convert2IXML(const QString &_inStr,
                                  bool &_spellCorrected,
                                  bool _putXmlTagsInSeperateList,
-                                 QStringList* _lstXmlTags,
+                                 QVariantList* _lstXmlTags,
                                  const QList<enuTextTags::Type> _removingTags,
                                  const QString& _lang,
                                  quint32 _lineNo,

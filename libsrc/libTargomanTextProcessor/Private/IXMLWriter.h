@@ -71,7 +71,7 @@ public:
     QString convert2IXML(const QString& _inStr,
                          INOUT bool& _spellCorrected,                         
                          bool _putXmlTagsInSeperateList,
-                         QStringList* _lstXmlTags,
+                         QVariantList* _lstXmlTags,
                          const QList<enuTextTags::Type> _removingTags,
                          const QString& _lang = "",
                          quint32 _lineNo = 0,
@@ -95,22 +95,24 @@ private:
                            enuTextTags::Type _type,
                            const QString& _value,
                            bool _putXmlTagsInList,
-                           QStringList* _lstXmlTags, 
+                           QVariantList* _lstXmlTags, 
                            bool _setTagValue = true){
         QString Tag;
+        QString TagString = QString("%1").arg(enuTextTags::toStr(_type)).toLower();
         
         if(_setTagValue)
-            Tag = QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value);        
+            Tag = QString("<%1>%2</%1>").arg(TagString).arg(_value);        
         else
-            Tag = QString("<%1>").arg(enuTextTags::toStr(_type));
+            Tag = QString("<%1>").arg(TagString);
         
 
         if(_putXmlTagsInList)
         {
             _output.append(Tag);
-            _lstXmlTags->append(_setTagValue
-                                ? Tag
-                                : QString("<%1>%2</%1>").arg(enuTextTags::toStr(_type)).arg(_value));
+            QJsonObject TagValue;
+            TagValue.insert("t",QJsonValue(QString("<%1>").arg(TagString)));
+            TagValue.insert("v",QJsonValue(_value));
+            _lstXmlTags->append(TagValue.toVariantMap());
         }
         else
         {
