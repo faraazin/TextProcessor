@@ -78,7 +78,8 @@ public:
                          bool _interactive = false,
                          bool _useSpellCorrector = true,
                          bool _setTagValue = true,
-                         bool _convertToLower = false);
+                         bool _convertToLower = false,
+                         bool _detectSymbols = true);
     QString supportedSuffixes() const;
 
 private:

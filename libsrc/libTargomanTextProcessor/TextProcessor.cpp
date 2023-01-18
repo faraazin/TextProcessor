@@ -114,7 +114,8 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                                          bool _putXmlTagsInSeperateList,
                                          QVariantList* _lstXmlTags,
                                          bool _setTagValue,
-                                         bool _convertToLower) const
+                                         bool _convertToLower,
+                                         bool _detectSymbols) const
 {
     if (!Initialized)
         throw exTextProcessor("Text Processor has not been initialized");
@@ -133,7 +134,8 @@ QString TargomanTextProcessor::text2IXML(const QString &_inStr,
                        _interactive,
                        _useSpellCorrector,
                        _setTagValue,
-                       _convertToLower);
+                       _convertToLower,
+                       _detectSymbols);
 
     foreach(const stuIXMLReplacement& Replacement, _replacements)
         IXML.replace(Replacement.SearchRegExp, Replacement.AfterString);

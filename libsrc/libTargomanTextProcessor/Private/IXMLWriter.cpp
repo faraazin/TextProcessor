@@ -47,13 +47,13 @@ IXMLWriter::IXMLWriter() :
 
 void IXMLWriter::init(const QString &_configFile)
 {
-    this->AbbreviationDetectionRegexPattern = QStringLiteral("\\b(Mr\\.|Dr\\.");
+    this->AbbreviationDetectionRegexPattern = QStringLiteral("");
 
     QFile AbbrF(_configFile);
     AbbrF.open(QIODevice::ReadOnly);
     QByteArray DataLine;
     int CommentIndex = -1;
-
+    int line = 0;
     while (!AbbrF.atEnd())
     {
         DataLine = AbbrF.readLine().trimmed();
@@ -61,7 +61,13 @@ void IXMLWriter::init(const QString &_configFile)
             continue;
         if ((CommentIndex = DataLine.indexOf("##")) >= 0)
             DataLine.truncate(CommentIndex);
-        this->AbbreviationDetectionRegexPattern.append("|" + DataLine.replace(".", "\\."));
+        if (line > 0) {
+            this->AbbreviationDetectionRegexPattern.append("|");
+        } else {
+            this->AbbreviationDetectionRegexPattern.append("\\b(");
+        }
+        line++;
+        this->AbbreviationDetectionRegexPattern.append(DataLine);
     }
 
     //this->RxAbbrDic = QRegularExpression (AbbreviationDetectionRegex + ")(?=\\b)");
@@ -89,11 +95,18 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
                                  bool _interactive,
                                  bool _useSpellCorrector,
                                  bool _setTagValue,
-                                 bool _convertToLower)
+                                 bool _convertToLower,
+                                 bool _detectSymbols)
 {
     // Email detection
     thread_local static QRegularExpression RxEmail = QRegularExpression("([A-Za-z0-9._%+-][A-Za-z0-9._%+-]*@[A-Za-z0-9.-][A-Za-z0-9.-]*\\.[A-Za-z]{2,4})");
-    thread_local static QRegularExpression RxAbbrDic = QRegularExpression(this->AbbreviationDetectionRegexPattern + ")(?=[^\\w]|$)");
+    thread_local static QRegularExpression RxAbbrDic;
+    
+    bool RxAbbrDicIsValid = false;
+    if(this->AbbreviationDetectionRegexPattern.length() > 0) {
+        RxAbbrDic.setPattern(this->AbbreviationDetectionRegexPattern + ")(?=[^\\w]|$)");
+        RxAbbrDicIsValid = true;
+    }
 
     QStringList AllowedFarsiDomainNames = {
         QStringLiteral("کام"),
@@ -122,8 +135,8 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
     thread_local static QRegularExpression RxURLValidator = QRegularExpression("^" + URLRegExPattern + "$",  QRegularExpression::CaseInsensitiveOption);
 
     // Abbreviations
-    thread_local static QRegularExpression RxAbbr = QRegularExpression(QStringLiteral("\\b([A-Z]\\.(?:[A-Z\\d]\\.)(?:[A-Z\\d]\\.)*)(?=[^\\w]|$)"));
-    thread_local static QRegularExpression RxAbbrDotless = QRegularExpression(QStringLiteral("\\b([A-Z]\\.[A-Z\\d](?:\\.[A-Z\\d])*)\\b"));
+    // thread_local static QRegularExpression RxAbbr = QRegularExpression(QStringLiteral("\\b([A-Z]\\.(?:[A-Z\\d]\\.)(?:[A-Z\\d]\\.)*)(?=[^\\w]|$)"));
+    // thread_local static QRegularExpression RxAbbrDotless = QRegularExpression(QStringLiteral("\\b([A-Z]\\.[A-Z\\d](?:\\.[A-Z\\d])*)\\b"));
     thread_local static QRegularExpression RxMultiDots = QRegularExpression(QStringLiteral("(\\.\\.(\\.)*)"));
 
     // suffixes
@@ -225,7 +238,7 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
         }else if (RxURLValidator.match(PhraseTokens.first()).hasMatch()){ //check whether first token is IP of a website or not.
             LstURL.append(PhraseTokens.first());
             PhraseTokens[0] = "TGMNURL";
-        }else if (RxAbbrDic.match(PhraseTokens.first()).hasMatch()){ //check whether first token is in abbreviation dictionary or not.
+        }else if (RxAbbrDicIsValid && RxAbbrDic.match(PhraseTokens.first()).hasMatch()){ //check whether first token is in abbreviation dictionary or not.
             LstAbbr[0].append(PhraseTokens.first());
             PhraseTokens[0] = "TGMNABD";
         }else{  // if first token was non of the above, it is ordered list item.
@@ -246,9 +259,11 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
 
     //find and replace a list patterns.
     OutputPhrase = this->markByRegex(OutputPhrase, RxEmail, "EML", &LstEmail);
-    OutputPhrase = this->markByRegex(OutputPhrase, RxAbbr, "ABR", &LstAbbr[1]);
-    OutputPhrase = this->markByRegex(OutputPhrase, RxAbbrDotless, "ABS", &LstAbbr[2]);
-    OutputPhrase = this->markByRegex(OutputPhrase, RxAbbrDic, "ABD", &LstAbbr[0]);
+    // OutputPhrase = this->markByRegex(OutputPhrase, RxAbbr, "ABR", &LstAbbr[1]);
+    // OutputPhrase = this->markByRegex(OutputPhrase, RxAbbrDotless, "ABS", &LstAbbr[2]);
+    if(RxAbbrDicIsValid) {
+        OutputPhrase = this->markByRegex(OutputPhrase, RxAbbrDic, "ABD", &LstAbbr[0]);
+    }
     OutputPhrase = this->markByRegex(OutputPhrase, RxURL, "URL", &LstURL);
     OutputPhrase = this->markByRegex(OutputPhrase, RxMultiDots, "MDT", nullptr);
     OutputPhrase = this->markByRegex(OutputPhrase, RxDate, "DAT", &LstDate);
@@ -267,7 +282,11 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
     InputPhrase = OutputPhrase;
     OutputPhrase.clear();
     foreach (const QChar& Char, InputPhrase){
-        if (!Char.isLetterOrNumber() && Char != ARABIC_ZWNJ){
+        if (!Char.isLetterOrNumber() 
+                && Char != ARABIC_ZWNJ
+                && Char.category() != QChar::Symbol_Modifier 
+                && Char.category() != QChar::Symbol_Math 
+                && Char.category() != QChar::Symbol_Other){
             OutputPhrase.append(' ');
             OutputPhrase.append(Char);
             OutputPhrase.append(' ');
@@ -278,23 +297,25 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
 
     TargomanDebug(7,"[TKN] |"<<OutputPhrase<<"|");
 
-    //for each token, if any letter of a token is a symbol, add that token to list of symbols and replace whole symbol with " TGMNSYM "
-    QStringList Tokens = OutputPhrase.split(" ",QString::SkipEmptyParts);
-    for (int i=0; i<Tokens.size(); i++) {
-        bool IsSymbol = true;
-        foreach (const QChar& Ch, Tokens[i])
-            if (Ch.category() != QChar::Symbol_Modifier &&
-                    Ch.category() != QChar::Symbol_Math &&
-                    Ch.category() != QChar::Symbol_Other){
-                IsSymbol = false;
-                break;
+    if (_detectSymbols) {
+        //for each token, if any letter of a token is a symbol, add that token to list of symbols and replace whole symbol with " TGMNSYM "
+        QStringList Tokens = OutputPhrase.split(" ",QString::SkipEmptyParts);
+        for (int i=0; i<Tokens.size(); i++) {
+            bool IsSymbol = true;
+            foreach (const QChar& Ch, Tokens[i])
+                if (Ch.category() != QChar::Symbol_Modifier &&
+                        Ch.category() != QChar::Symbol_Math &&
+                        Ch.category() != QChar::Symbol_Other){
+                    IsSymbol = false;
+                    break;
+                }
+            if (IsSymbol){
+                LstSymbols.append(Tokens[i]);
+                Tokens[i] = " TGMNSYM ";
             }
-        if (IsSymbol){
-            LstSymbols.append(Tokens[i]);
-            Tokens[i] = " TGMNSYM ";
         }
+        OutputPhrase = Tokens.join(" ");
     }
-    OutputPhrase = Tokens.join(" ");
 
     TargomanDebug(7,"[SYM] |"<<OutputPhrase<<"|");
 
@@ -334,14 +355,14 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
             TagType = enuTextTags::Abbreviation;
             TagValue = LstAbbr[0].takeFirst();
         }
-        else if(Token == "TGMNABR"){
-            TagType = enuTextTags::Abbreviation;
-            TagValue = LstAbbr[1].takeFirst();
-        }
-        else if(Token == "TGMNABS"){
-            TagType = enuTextTags::Abbreviation;
-            TagValue = LstAbbr[2].takeFirst();
-        }
+        // else if(Token == "TGMNABR"){
+        //     TagType = enuTextTags::Abbreviation;
+        //     TagValue = LstAbbr[1].takeFirst();
+        // }
+        // else if(Token == "TGMNABS"){
+        //     TagType = enuTextTags::Abbreviation;
+        //     TagValue = LstAbbr[2].takeFirst();
+        // }
         else if(Token == "TGMNDAT"){
             TagType = enuTextTags::Date;
             TagValue = LstDate.takeFirst();
@@ -351,8 +372,12 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
             TagValue = LstTime.takeFirst();
         }
         else if(Token == "TGMNORD"){
-            TagType = enuTextTags::Ordinals;
-            TagValue = LstOrdinal.takeFirst();
+            //TagType = enuTextTags::Ordinals;
+            TagValue = LstOrdinal.takeFirst();            
+            if(_convertToLower)
+                TagValue = TagValue.toLower();
+            OutputPhrase.append(TagValue);
+            IsTag = false;
         }
         else if(Token == "TGMNSNM"){
             TagType = enuTextTags::SpecialNumber;
