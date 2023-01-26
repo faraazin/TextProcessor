@@ -95,7 +95,8 @@ public:
                       QVariantList* _lstXmlTags = NULL,
                       bool _setTagValue = true,
                       bool _convertToLower = false,
-                      bool _detectSymbols = true) const;
+                      bool _detectSymbols = true,
+                      bool _setTagIndex = false) const;
 
     QString ixml2Text(const QString& _ixml,
                       bool _detokenize = true,

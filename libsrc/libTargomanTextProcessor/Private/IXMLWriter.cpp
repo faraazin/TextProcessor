@@ -96,7 +96,8 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
                                  bool _useSpellCorrector,
                                  bool _setTagValue,
                                  bool _convertToLower,
-                                 bool _detectSymbols)
+                                 bool _detectSymbols,
+                                 bool _setTagIndex)
 {
     // Email detection
     thread_local static QRegularExpression RxEmail = QRegularExpression("([A-Za-z0-9._%+-][A-Za-z0-9._%+-]*@[A-Za-z0-9.-][A-Za-z0-9.-]*\\.[A-Za-z]{2,4})");
@@ -144,9 +145,9 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
 
     //TODO: complete these regexes
     // Dates
-    thread_local static QRegularExpression RxDate = QRegularExpression(QStringLiteral("^$"));
+    thread_local static QRegularExpression RxDate = QRegularExpression(QStringLiteral("(?:\\b(?:[0-9]{1,4}[/\\\\-][0-9]{1,2}[/\\\\-][0-9]{1,4})\\b)"));
     // Times
-    thread_local static QRegularExpression RxTime = QRegularExpression(QStringLiteral("^$"));
+    thread_local static QRegularExpression RxTime = QRegularExpression(QStringLiteral("(?:\\b(?:[0-9]{1,2}:[0-9]{1,2}(?::[0-9]{1,2})?)\\b)"));
 
     // Numbers
     thread_local static QRegularExpression RxDashSeparator = QRegularExpression(QStringLiteral("(\\w)\\-(\\w)"));
@@ -341,6 +342,7 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
     enuTextTags::Type TagType;
     QString TagValue;
     bool IsTag;
+    QMap<enuTextTags::Type, int> TagCounts;
     foreach (const QString& Token, InputPhrase.split(" ",QString::SkipEmptyParts)) {
         IsTag = true;
         if(Token == "TGMNEML"){
@@ -433,8 +435,12 @@ QString IXMLWriter::convert2IXML(const QString &_inStr,
                 TagValue = TagValue.toLower();
             if(IgnoreTags.contains(TagType))
                 OutputPhrase.append(TagValue);
-            else
-                replaceTag(OutputPhrase, TagType, TagValue,_putXmlTagsInSeperateList,_lstXmlTags,_setTagValue);
+            else {
+                int TagIndex = TagCounts.value(TagType, -1);
+                TagIndex++;
+                TagCounts.insert(TagType, TagIndex);
+                replaceTag(OutputPhrase, TagType, TagValue,_putXmlTagsInSeperateList,_lstXmlTags,_setTagValue, TagIndex, _setTagIndex);
+            }
         }
         OutputPhrase.append(" ");
     }

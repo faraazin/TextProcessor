@@ -79,7 +79,8 @@ public:
                          bool _useSpellCorrector = true,
                          bool _setTagValue = true,
                          bool _convertToLower = false,
-                         bool _detectSymbols = true);
+                         bool _detectSymbols = true,
+                         bool _setTagIndex = false);
     QString supportedSuffixes() const;
 
 private:
@@ -97,9 +98,16 @@ private:
                            const QString& _value,
                            bool _putXmlTagsInList,
                            QVariantList* _lstXmlTags, 
-                           bool _setTagValue = true){
+                           bool _setTagValue,
+                           int _index,
+                           bool _setIndex){
         QString Tag;
-        QString TagString = QString("%1").arg(enuTextTags::toStr(_type)).toLower();
+        QString TagString;
+
+        if(_setIndex)
+            TagString = QString("%1-%2").arg(enuTextTags::toStr(_type)).arg(_index).toLower();
+        else
+            TagString = QString("%1").arg(enuTextTags::toStr(_type)).toLower();
         
         if(_setTagValue)
             Tag = QString("<%1>%2</%1>").arg(TagString).arg(_value);        
